@@ -28,3 +28,7 @@ Inspired by this [tweet](https://twitter.com/mathsppblog/status/1462706686058246
 ## License
 
 MIT License
+
+# See Also
+
+[iBatteryStats](https://github.com/saket13/iBatteryStats) - a similar idea with many more features
