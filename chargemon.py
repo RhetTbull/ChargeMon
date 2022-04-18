@@ -13,9 +13,10 @@ class ChargingMonitor(rumps.App):
         self.icon = ICON_PLUGGED if self.plugged_in else ICON_UNPLUGGED
 
         # default values for monitoring
-        self.update_percent_interval = 120
+        self.update_percent_interval = 180 
         self.update_icon_interval = 10
         self.unplug_percent = 95
+        self.plug_percent = 80
 
         # Create menu with checkboxes to toggle notifications and alerts
         self.alert = rumps.MenuItem("Alert", callback=self.on_alert)
@@ -58,9 +59,10 @@ class ChargingMonitor(rumps.App):
         return getattr(battery, "percent", 0)
 
     def update_percent(self, timer):
-        """Create alert or notification if battery sufficiently charged"""
+        """Create alert or notification if battery sufficiently charged or is discharged"""
         percent = self.battery_percent
         if percent >= self.unplug_percent and self.plugged_in:
+            # plugged in and battery is charged
             if self.alert.state:
                 rumps.alert(
                     title="Unplug the charger!",
@@ -71,6 +73,21 @@ class ChargingMonitor(rumps.App):
             if self.notification.state:
                 rumps.notification(
                     title="Unplug the charger!",
+                    subtitle="",
+                    message=f"Battery {percent} percent charged.",
+                )
+        elif percent <= self.plug_percent and not self.plugged_in:
+            # not plugged in and battery is discharged
+            if self.alert.state:
+                rumps.alert(
+                    title="Plug in the charger!",
+                    message=f"Battery {percent} percent charged.",
+                    ok=None,
+                    cancel=None,
+                )
+            if self.notification.state:
+                rumps.notification(
+                    title="Plug in the charger!",
                     subtitle="",
                     message=f"Battery {percent} percent charged.",
                 )
