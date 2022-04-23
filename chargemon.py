@@ -13,19 +13,24 @@ class ChargingMonitor(rumps.App):
         self.icon = ICON_PLUGGED if self.plugged_in else ICON_UNPLUGGED
 
         # default values for monitoring
-        self.update_percent_interval = 180 
+        self.update_percent_interval = 180
         self.update_icon_interval = 10
         self.unplug_percent = 95
         self.plug_percent = 80
 
-        # Create menu with checkboxes to toggle notifications and alerts
+        # Create menu items to toggle notifications and alerts
         self.alert = rumps.MenuItem("Alert", callback=self.on_alert)
         self.alert.state = True
         self.notification = rumps.MenuItem(
             "Notification", callback=self.on_notification
         )
         self.notification.state = False
-        self.menu = [self.alert, self.notification]
+
+        # Create pause/resume menu item
+        self.pause = rumps.MenuItem("Pause", callback=self.on_pause)
+
+        # Add menu items
+        self.menu = [self.alert, self.notification, self.pause]
 
         # start timers, one for the battery percent, one for the icon
         self.percent_timer = rumps.Timer(
@@ -45,6 +50,15 @@ class ChargingMonitor(rumps.App):
         """Toggle alert/notification"""
         sender.state = not sender.state
         self.alert.state = not self.alert.state
+
+    def on_pause(self, sender):
+        """Pause/resume the percent timer"""
+        if self.percent_timer.is_alive():
+            self.percent_timer.stop()
+            sender.title = "Resume"
+        else:
+            self.percent_timer.start()
+            sender.title = "Pause"
 
     @property
     def plugged_in(self):
@@ -93,7 +107,7 @@ class ChargingMonitor(rumps.App):
                 )
 
     def update_icon(self, timer):
-        """Update icon if necessary for plugged in/out status """
+        """Update icon if necessary for plugged in/out status"""
         plugged_in = self.plugged_in
         if plugged_in and self.icon != ICON_PLUGGED:
             self.icon = ICON_PLUGGED
