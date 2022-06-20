@@ -1,10 +1,12 @@
-"""macOS StatusBar app to remind you to unplug your laptop when it's charged"""
+"""macOS StatusBar/MenuBar app to remind you to unplug your laptop when it's charged"""
 
 import psutil
 import rumps
 
 ICON_PLUGGED = "chargemon_plugged.png"
 ICON_UNPLUGGED = "chargemon_unplugged.png"
+
+__version__ = "0.2.0"
 
 
 class ChargingMonitor(rumps.App):
