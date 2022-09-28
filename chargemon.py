@@ -1,18 +1,26 @@
 """macOS StatusBar/MenuBar app to remind you to unplug your laptop when it's charged"""
 
+import contextlib
+import plistlib
+
 import psutil
 import rumps
 from Foundation import NSLog
 
 APP_NAME = "ChargeMon"
 
+# where to store config, will be in ~/Application Support/APP_NAME
+CONFIG_FILE = f"{APP_NAME}.plist"
+
+# icons
 ICON_PLUGGED = "chargemon_plugged.png"
 ICON_PLUGGED_SNOOZE = "chargemon_plugged_snooze.png"
 ICON_UNPLUGGED = "chargemon_unplugged.png"
 ICON_UNPLUGGED_SNOOZE = "chargemon_unplugged_snooze.png"
 
-PLUG_IN_OPTIONS = [40, 45, 50, 55, 60, 65, 70]
-PLUG_IN_DEFAULT = 40
+# plugin/unplug percentages for building menu
+PLUGIN_OPTIONS = [40, 45, 50, 55, 60, 65, 70]
+PLUGIN_DEFAULT = 40
 UNPLUG_OPTIONS = [75, 80, 85, 90, 95, 100]
 UNPLUG_DEFAULT = 80
 
@@ -30,11 +38,11 @@ class ChargingMonitor(rumps.App):
         self.update_percent_interval = 180
         self.update_icon_interval = 10
         self.unplug_percent = UNPLUG_DEFAULT
-        self.plug_percent = PLUG_IN_DEFAULT
+        self.plug_percent = PLUGIN_DEFAULT
 
         # Create menu items for the plug/unplug percentages
         self.menu_plug_percent = rumps.MenuItem("Plug in at")
-        for percent in PLUG_IN_OPTIONS:
+        for percent in PLUGIN_OPTIONS:
             self.menu_plug_percent.add(
                 rumps.MenuItem(str(percent), callback=self.on_plug_percent)
             )
@@ -91,6 +99,9 @@ class ChargingMonitor(rumps.App):
         # snooze timer set when user clicks snooze on alert
         self.snooze_timer = None
 
+        # load config from plist file and init menu state
+        self.load_config()
+
         self.log(
             f"started: plugged_in={self.plugged_in}, battery={self.battery_percent}%%"
         )
@@ -99,11 +110,13 @@ class ChargingMonitor(rumps.App):
         """Toggle alert/notification"""
         sender.state = not sender.state
         self.menu_notification.state = not self.menu_notification.state
+        self.save_config()
 
     def on_notification(self, sender):
         """Toggle alert/notification"""
         sender.state = not sender.state
         self.menu_alert.state = not self.menu_alert.state
+        self.save_config()
 
     def on_pause(self, sender):
         """Pause/resume the percent timer"""
@@ -129,12 +142,14 @@ class ChargingMonitor(rumps.App):
         self.plug_percent = int(sender.title)
         self.set_menu_state(self.menu_plug_percent, int(sender.title))
         self.log(f"plug in at {self.plug_percent}%%")
+        self.save_config()
 
     def on_unplug_percent(self, sender):
         """Set the unplug percentage"""
         self.unplug_percent = int(sender.title)
         self.set_menu_state(self.menu_unplug_percent, int(sender.title))
         self.log(f"unplug at {self.unplug_percent}%%")
+        self.save_config()
 
     def on_about(self, sender):
         """Display about dialog."""
@@ -243,6 +258,43 @@ class ChargingMonitor(rumps.App):
             self.icon = (
                 ICON_UNPLUGGED_SNOOZE if self.menu_snooze.state else ICON_UNPLUGGED
             )
+
+    def load_config(self):
+        """Load config from plist file in Application Support folder."""
+        self.config = {}
+        with contextlib.suppress(FileNotFoundError):
+            with self.open(CONFIG_FILE, "rb") as f:
+                with contextlib.suppress(Exception):
+                    # don't crash if config file is malformed
+                    self.config = plistlib.load(f)
+        if not self.config:
+            # file didn't exist or was malformed, create a new one
+            # initialize config with default values
+            self.config = {
+                "alert": True,
+                "notification": False,
+                "plugin_percent": PLUGIN_DEFAULT,
+                "unplug_percent": UNPLUG_DEFAULT,
+            }
+        self.log(f"loaded config: {self.config}")
+        self.menu_alert.state = self.config.get("alert", True)
+        self.menu_notification.state = self.config.get("notification", False)
+        self.plug_percent = self.config.get("plugin_percent", PLUGIN_DEFAULT)
+        self.unplug_percent = self.config.get("unplug_percent", UNPLUG_DEFAULT)
+        self.set_menu_state(self.menu_plug_percent, self.plug_percent)
+        self.set_menu_state(self.menu_unplug_percent, self.unplug_percent)
+
+        self.save_config()
+
+    def save_config(self):
+        """Write config to plist file in Application Support folder."""
+        self.config["alert"] = bool(self.menu_alert.state)
+        self.config["notification"] = bool(self.menu_notification.state)
+        self.config["plugin_percent"] = self.plug_percent
+        self.config["unplug_percent"] = self.unplug_percent
+        with self.open(CONFIG_FILE, "wb+") as f:
+            plistlib.dump(self.config, f)
+        self.log(f"saved config: {self.config}")
 
 
 def create_run_later_timer_callback(callback):
