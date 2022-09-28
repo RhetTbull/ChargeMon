@@ -26,7 +26,7 @@ UNPLUG_DEFAULT = 80
 
 SNOOZE_TIME = 15 * 60
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 
 class ChargingMonitor(rumps.App):

@@ -3,7 +3,12 @@
 from setuptools import setup
 
 APP = ["chargemon.py"]
-DATA_FILES = ["chargemon_plugged.png", "chargemon_unplugged.png"]
+DATA_FILES = [
+    "chargemon_plugged.png",
+    "chargemon_unplugged.png",
+    "chargemon_plugged_snooze.png",
+    "chargemon_unplugged_snooze.png",
+]
 OPTIONS = {
     "argv_emulation": True,
     "iconfile": "icon.icns",
