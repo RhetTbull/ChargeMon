@@ -4,9 +4,17 @@ Simple macOS StatusBar app to monitor battery charge status and remind you to un
 
 # Overview
 
-Very simple app -- can toggle between alert or notification.  No other settings.
+Very simple app -- can toggle between alert or notification.
 
 ![StatusBar screenshot](statusbar.png)
+
+Settings:
+
+- Alert: Shows a dialog box when the battery is sufficiently charged
+- Notification: Shows a notification when the battery is sufficiently charged
+- Pause: Pauses the app until you toggle it back on
+- Snooze: Snooze alerts for 15 minutes
+- About: Shows the About dialog
 
 Sample alert:
 
