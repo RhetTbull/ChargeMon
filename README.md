@@ -31,8 +31,11 @@ Sample alert:
 
 ## Notes
 
+<strike>
 Doesn't work with python 3.10 as [rumps](https://github.com/jaredks/rumps) is currently not compatible with 3.10.
+</strike>
 
+Actually, I was able to build this with python 3.11 so the problem with [rumps](https://github.com/jaredks/rumps) may have been fixed in the latest release.
 
 If building with [pyenv](https://github.com/pyenv/pyenv) installed python, you'll need to build the python with framework support: 
 
